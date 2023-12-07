@@ -1,0 +1,23 @@
+extend input ProductInput {
+  # media: [ImageInfoInput]
+  mediaS3: [ImageInfoInput]
+}
+extend input ProductVariantInput {
+  # media: [ImageInfoInput]
+  mediaS3: [ImageInfoInput]
+}
+
+input ImageInfoInput {
+  URLs: ImageSizesInput!
+  priority: Int
+  # _id: ID
+  productId: ID
+  variantId: ID
+}
+input ImageSizesInput {
+  large: String
+  medium: String
+  original: String
+  small: String
+  thumbnail: String
+}
