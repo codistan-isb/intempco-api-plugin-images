@@ -16,273 +16,260 @@ const bucketPlateForm = process.env.BUCKET_PLATFORM;
 var _context = null;
 
 const resolvers = {
-  Product: {
-    async media(parent, args, context, info) {
-      return parent.media;
+    Product: {
+        async media(parent, args, context, info) {
+            return parent.media;
+        },
     },
-  },
-  ProductVariant: {
-    async media(parent, args, context, info) {
-      return parent.media ? parent.media : [];
+    ProductVariant: {
+        async media(parent, args, context, info) {
+            return parent.media ? parent.media : [];
+        },
     },
-  },
 };
 
 function myStartup1(context) {
-  _context = context;
-  const { app, collections, rootUrl } = context;
+    _context = context;
+    const { app, collections, rootUrl } = context;
 
-  if (app.expressApp) {
-    // enable files upload
-    app.expressApp.use(fileUpload());
+    if (app.expressApp) {
+        // enable files upload
+        app.expressApp.use(fileUpload());
 
-    //add other middleware
-    app.expressApp.use(cors());
-    app.expressApp.use(bodyParser.json());
-    app.expressApp.use(bodyParser.urlencoded({ extended: true }));
-    app.expressApp.use(morgan("dev"));
-    app.expressApp.post("/upload", async (req, res) => {
-      // console.log("req.body", req.body);
-      // console.log("req.files", req.files);
-      let isMulti = req.body.isMulti;
-      let uploadPath = req.body.uploadPath;
-      console.log("upload path is ", uploadPath);
-      let uploads = [];
+        //add other middleware
+        app.expressApp.use(cors());
+        app.expressApp.use(bodyParser.json());
+        app.expressApp.use(bodyParser.urlencoded({ extended: true }));
+        app.expressApp.use(morgan("dev"));
+        app.expressApp.post("/upload", async(req, res) => {
+            // console.log("req.body", req.body);
+            // console.log("req.files", req.files);
+            let isMulti = req.body.isMulti;
+            let uploadPath = req.body.uploadPath;
+            console.log("upload path is ", uploadPath);
+            let uploads = [];
 
-      sharp.cache(false);
-      try {
-        if (!req.files) {
-          res.send({
-            status: false,
-            message: "No file uploaded",
-          });
-        } else if (isMulti == "true") {
-          let data = [];
+            sharp.cache(false);
+            try {
+                if (!req.files) {
+                    res.send({
+                        status: false,
+                        message: "No file uploaded",
+                    });
+                } else if (isMulti == "true") {
+                    let data = [];
 
-          //loop all files
-          _.forEach(_.keysIn(req.files.photos), (key) => {
-            let photo = req.files.photos[key];
-            console.log("multi photos are ", photo);
+                    //loop all files
+                    _.forEach(_.keysIn(req.files.photos), (key) => {
+                        let photo = req.files.photos[key];
+                        console.log("multi photos are ", photo);
 
-            let getType = photo.mimetype.split("/");
-            console.log("get type is ", getType);
-            let fileType = getType[0];
-            console.log("file type is ", fileType);
-            let promise = S3UploadImage(
-              req.files.photos[key].data,
-              req.files.photos[key].name,
-              key,
-              fileType,
-              uploadPath
-            ).then((uploadResponse) => {
-              console.log("upload response", uploadResponse);
-              if (uploadResponse[key]) {
-                data[uploadResponse[key]].url = uploadResponse.url;
-                data[uploadResponse[key]].availableSizes =
-                  uploadResponse.urlObject;
-              }
-            });
-            uploads.push(promise);
-            data.push({
-              name: photo.name,
-              mimetype: photo.mimetype,
-              size: photo.size,
-            });
-          });
-          Promise.all(uploads)
-            .then(async function () {
-              console.log("data in promises", data);
-              res.send({
-                status: true,
-                message: "Files are uploaded",
-                data: data,
-              });
-            })
-            .catch(function (err) {
-              console.log(err);
-              res.send(err);
-            });
-          //return response
-        } else if (isMulti == "false") {
-          if (bucketPlateForm === "GCP") {
+                        let getType = photo.mimetype.split("/");
+                        console.log("get type is ", getType);
+                        let fileType = getType[0];
+                        console.log("file type is ", fileType);
+                        let promise = S3UploadImage(
+                            req.files.photos[key].data,
+                            req.files.photos[key].name,
+                            key,
+                            fileType,
+                            uploadPath
+                        ).then((uploadResponse) => {
+                            console.log("upload response", uploadResponse);
+                            if (uploadResponse[key]) {
+                                data[uploadResponse[key]].url = uploadResponse.url;
+                                data[uploadResponse[key]].availableSizes =
+                                    uploadResponse.urlObject;
+                            }
+                        });
+                        uploads.push(promise);
+                        data.push({
+                            name: photo.name,
+                            mimetype: photo.mimetype,
+                            size: photo.size,
+                        });
+                    });
+                    Promise.all(uploads)
+                        .then(async function() {
+                            console.log("data in promises", data);
+                            res.send({
+                                status: true,
+                                message: "Files are uploaded",
+                                data: data,
+                            });
+                        })
+                        .catch(function(err) {
+                            console.log(err);
+                            res.send(err);
+                        });
+                    //return response
+                } else if (isMulti == "false") {
+                    if (bucketPlateForm === "GCP") {
+                        // console.log("GCP");
+                        let imageResponse = await gcpUpload(req, res);
+                        // console.log("imageResponse", imageResponse);
+                        res.status(200).json(imageResponse);
+                    } else {
+                        console.log("S3");
+                        let data = [];
+                        //Use the name of the input field (i.e. "avatar") to retrieve the uploaded file
+                        let photo = req.files.photos;
+                        let getType = photo.mimetype.split("/");
+                        // console.log("get type is ", getType);
+                        let fileType = getType[0];
+                        // console.log("file type is ", fileType);
+                        // console.log("photo is ", photo);
+                        data.push({
+                            name: photo.name,
+                            mimetype: photo.mimetype,
+                            size: photo.size,
+                        });
+                        S3UploadImage(req.files.photos.data, req.files.photos.name, 0, fileType, uploadPath).then(
+                            (uploadResponse) => {
+                                console.log("uploadResponse", uploadResponse);
+                                data[0].url = uploadResponse.url;
+                                console.log("upload response is:- ", uploadResponse);
+                                data[0].availableSizes = uploadResponse.urlObject;
+                                res.send({
+                                    status: true,
+                                    message: "File is uploaded",
+                                    data,
+                                });
+                            }
+                        ).catch((err) => {
+                            console.log("err", err);
+                            res.send({
+                                status: false,
+                                message: "File not uploaded",
+                                err,
+                            });
+                        });
+                    }
+                }
+            } catch (err) {
+                console.log("err", err);
+                res.status(500).send(err);
+            }
+        });
+        app.expressApp.delete("/delete", async(req, res) => {
+            console.log("req.body", req.files);
+            let fileName = req.files.fileName;
+            console.log("fileName", fileName.name);
+            // if (bucketPlateForm === "GCP") {
             // console.log("GCP");
-            let imageResponse = await gcpUpload(req, res);
-            // console.log("imageResponse", imageResponse);
+            let imageResponse = await gcpDelete(fileName.name);
+            console.log("imageResponse", imageResponse);
             res.status(200).json(imageResponse);
-          } else {
-            console.log("S3");
-            let data = [];
-            //Use the name of the input field (i.e. "avatar") to retrieve the uploaded file
-            let photo = req.files.photos;
-            let getType = photo.mimetype.split("/");
-            console.log("get type is ", getType);
-            let fileType = getType[0];
-            console.log("file type is ", fileType);
-            console.log("photo is ", photo);
-            data.push({
-              name: photo.name,
-              mimetype: photo.mimetype,
-              size: photo.size,
+            // } else {
+            //   console.log("S3");
+            //   let imageResponse = await S3Delete(fileName);
+            //   res.status(200).json(imageResponse);
+            // }
+        });
+        app.expressApp.get("/health-check", async(req, res) => {
+            const timestamp = new Date().toISOString();
+            const statusCode = res.statusCode;
+
+            res.json({
+                timestamp: timestamp,
+                statusCode: statusCode,
             });
-            S3UploadImage(
-              req.files.photos.data,
-              req.files.photos.name,
-              0,
-              fileType,
-              uploadPath
-            ).then((uploadResponse) => {
-              data[0].url = uploadResponse.url;
-              console.log("upload response is ", uploadResponse);
-              data[0].availableSizes = uploadResponse?.urlObject;
-              res.send({
-                status: true,
-                message: "File is uploaded",
-                data,
-              });
-            });
-          }
+        });
+    }
+
+    const ImageSizes = new SimpleSchema({
+        large: {
+            type: String,
+            label: "Large",
+            optional: true,
+        },
+        medium: {
+            type: String,
+            label: "Medium",
+            optional: true,
+        },
+        original: {
+            type: String,
+            label: "Original",
+            optional: true,
+        },
+        small: {
+            type: String,
+            label: "Small",
+            optional: true,
+        },
+        thumbnail: {
+            type: String,
+            label: "Thumbnail",
+            optional: true,
+        },
+    });
+    const ImageInfo = new SimpleSchema({
+        priority: {
+            type: Number,
+            defaultValue: 0,
+        },
+        productId: {
+            type: String,
+            label: "Product Id",
+            optional: true,
+        },
+        variantId: {
+            type: String,
+            label: "Variant Id",
+            optional: true,
+        },
+        URLs: {
+            type: ImageSizes,
+            optional: true,
+        },
+    });
+
+    context.simpleSchemas.Product.extend({
+        media: {
+            type: Array,
+            label: "Media",
+            optional: true,
+        },
+        "media.$": {
+            type: ImageInfo,
         }
-      } catch (err) {
-        console.log("err", err);
-        res.status(500).send(err);
-      }
     });
-    app.expressApp.delete("/delete", async (req, res) => {
-      console.log("req.body", req.files);
-      let fileName = req.files.fileName;
-      console.log("fileName", fileName.name);
-      // if (bucketPlateForm === "GCP") {
-      // console.log("GCP");
-      let imageResponse = await gcpDelete(fileName.name);
-      console.log("imageResponse", imageResponse);
-      res.status(200).json(imageResponse);
-      // } else {
-      //   console.log("S3");
-      //   let imageResponse = await S3Delete(fileName);
-      //   res.status(200).json(imageResponse);
-      // }
+    context.simpleSchemas.ProductVariant.extend({
+        media: {
+            type: Array,
+            label: "Media",
+            optional: true,
+        },
+        "media.$": {
+            type: ImageInfo,
+        }
     });
-    app.expressApp.get("/health-check", async (req, res) => {
-      const timestamp = new Date().toISOString();
-      const statusCode = res.statusCode;
-
-      res.json({
-        timestamp: timestamp,
-        statusCode: statusCode,
-      });
-    });
-  }
-
-  const ImageSizes = new SimpleSchema({
-    large: {
-      type: String,
-      label: "Large",
-      optional: true,
-    },
-    medium: {
-      type: String,
-      label: "Medium",
-      optional: true,
-    },
-    original: {
-      type: String,
-      label: "Original",
-      optional: true,
-    },
-    small: {
-      type: String,
-      label: "Small",
-      optional: true,
-    },
-    thumbnail: {
-      type: String,
-      label: "Thumbnail",
-      optional: true,
-    },
-  });
-  const ImageInfo = new SimpleSchema({
-    priority: {
-      type: Number,
-      defaultValue: 0,
-    },
-    productId: {
-      type: String,
-      label: "Product Id",
-      optional: true,
-    },
-    variantId: {
-      type: String,
-      label: "Variant Id",
-      optional: true,
-    },
-    URLs: {
-      type: ImageSizes,
-      optional: true,
-    },
-  });
-
-  context.simpleSchemas.Product.extend({
-    media: {
-      type: Array,
-      label: "Media",
-      optional: true,
-    },
-    "media.$": {
-      type: ImageInfo,
-    },
-    mediaS3: {
-      type: Array,
-      label: "Media",
-      optional: true,
-    },
-    "mediaS3.$": {
-      type: ImageInfo,
-    },
-  });
-  context.simpleSchemas.ProductVariant.extend({
-    media: {
-      type: Array,
-      label: "Media",
-      optional: true,
-    },
-    "media.$": {
-      type: ImageInfo,
-    },
-    mediaS3: {
-      type: Array,
-      label: "Media",
-      optional: true,
-    },
-    "mediaS3.$": {
-      type: ImageInfo,
-    },
-  });
 }
 
 // The new myPublishProductToCatalog function parses our products,
 // gets the new uploadedBy attribute, and adds it to the corresponding catalog variant in preparation for publishing it to the catalog
 async function S3PublishMedia(
-  catalogProduct,
-  { context, product, shop, variants }
+    catalogProduct, { context, product, shop, variants }
 ) {
-  const { app, collections, rootUrl } = context;
-  const { Product } = collections;
-  // let productObj=await getProductMedia(context,catalogProduct.productId);
-  catalogProduct.media = product?.media;
-  catalogProduct.primaryImage = product?.media ? product?.media[0] : null;
-  catalogProduct.variants &&
-    catalogProduct.variants.map(async (catalogVariant) => {
-      const productVariant = variants.find(
-        (variant) => variant._id === catalogVariant.variantId
-      );
-      if (productVariant.uploadedBy) {
-        catalogVariant.uploadedBy = productVariant.uploadedBy || null;
-        catalogVariant.ancestorId = productVariant["ancestors"][0]
-          ? productVariant["ancestors"][0]
-          : null;
-      }
-      catalogVariant.media = productVariant.media;
-    });
+    const { app, collections, rootUrl } = context;
+    const { Product } = collections;
+    // let productObj=await getProductMedia(context,catalogProduct.productId);
+    catalogProduct.media = product.media;
+    catalogProduct.primaryImage = product.media ? product.media[0] : null;
+    catalogProduct.variants &&
+        catalogProduct.variants.map(async(catalogVariant) => {
+            const productVariant = variants.find(
+                (variant) => variant._id === catalogVariant.variantId
+            );
+            if (productVariant.uploadedBy) {
+                catalogVariant.uploadedBy = productVariant.uploadedBy || null;
+                catalogVariant.ancestorId = productVariant["ancestors"][0] ?
+                    productVariant["ancestors"][0] :
+                    null;
+            }
+            catalogVariant.media = productVariant.media;
+        });
 }
 
 /**
@@ -291,18 +278,18 @@ async function S3PublishMedia(
  * @returns {undefined}
  */
 export default async function register(app) {
-  await app.registerPlugin({
-    label: "Image to S3",
-    name: "images-S3",
-    version: pkg.version,
-    functionsByType: {
-      // startup: [myStartup1, createGCPConfig],
-      startup: [myStartup1],
-      publishProductToCatalog: [S3PublishMedia],
-    },
-    graphQL: {
-      schemas: [mySchema],
-      resolvers,
-    },
-  });
+    await app.registerPlugin({
+        label: "Image to S3",
+        name: "images-S3",
+        version: pkg.version,
+        functionsByType: {
+            // startup: [myStartup1, createGCPConfig],
+            startup: [myStartup1],
+            publishProductToCatalog: [S3PublishMedia],
+        },
+        graphQL: {
+            schemas: [mySchema],
+            resolvers,
+        },
+    });
 }

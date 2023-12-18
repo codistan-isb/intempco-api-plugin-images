@@ -1,10 +1,10 @@
 extend input ProductInput {
   # media: [ImageInfoInput]
-  mediaS3: [ImageInfoInput]
+  media: [ImageInfoInput]
 }
 extend input ProductVariantInput {
   # media: [ImageInfoInput]
-  mediaS3: [ImageInfoInput]
+  media: [ImageInfoInput]
 }
 
 input ImageInfoInput {
