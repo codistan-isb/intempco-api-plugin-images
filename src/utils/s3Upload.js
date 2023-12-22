@@ -8,7 +8,7 @@ const s3 = new AWS.S3({
   secretAccessKey: process.env.SECRET_ACCESS_KEY,
   region: process.env.REGION,
 });
-console.log("BUCKET_NAME:- ", BUCKET_NAME);
+// console.log("BUCKET_NAME:- ", BUCKET_NAME);
 // console.log("ID", process.env.ID);
 // console.log("process.env.SECRET", process.env.SECRET );
 // console.log("process.env.REGION", process.env.REGION);
@@ -26,6 +26,10 @@ const imgTransforms = [
   {
     name: "medium",
     transform: { size: 600, fit: "inside", format: "jpg", type: "image/jpeg" },
+  },
+  {
+    name: "small",
+    transform: { size: 450, fit: "inside", format: "jpg", type: "image/jpeg" },
   },
   {
     name: "thumbnail",
@@ -56,11 +60,11 @@ export async function S3UploadImage(
   uploadPath
 ) {
   try {
-    console.log("s3", s3);
-    console.log("process.env.ID", process.env.ID);
-    console.log("process.env.SECRET_ACCESS_KEY", process.env.SECRET_ACCESS_KEY);
-    console.log("process.env.ACCESS_KEY_ID", process.env.ACCESS_KEY_ID);
-    console.log("process.env.REGION", process.env.REGION);
+    // console.log("s3", s3);
+    // console.log("process.env.ID", process.env.ID);
+    // console.log("process.env.SECRET_ACCESS_KEY", process.env.SECRET_ACCESS_KEY);
+    // console.log("process.env.ACCESS_KEY_ID", process.env.ACCESS_KEY_ID);
+    // console.log("process.env.REGION", process.env.REGION);
     const currentTime = Date.now();
     const urlsArray = [];
     let urlsArrayObj = {
@@ -110,7 +114,7 @@ export async function S3UploadImage(
       const { Location } = await s3.upload(params).promise();
       urlsArray.push(Location);
     }
-    console.log("urlsArray", urlsArray);
+    // console.log("urlsArray", urlsArray);
     urlsArrayObj = urlToDictionary(urlsArray);
     return {
       status: true,
