@@ -117,7 +117,7 @@ function myStartup1(context) {
             let getType = photo.mimetype.split("/");
             // console.log("get type is ", getType);
             let fileType = getType[0];
-            // console.log("file type is ", fileType);
+            console.log("file type is ", fileType);
             // console.log("photo is ", photo);
             data.push({
               name: photo.name,
@@ -136,11 +136,19 @@ function myStartup1(context) {
                 data[0].url = uploadResponse.url;
                 console.log("upload response is:- ", uploadResponse);
                 data[0].availableSizes = uploadResponse.urlObject;
-                res.send({
-                  status: true,
-                  message: "File is uploaded",
-                  data,
-                });
+                if (uploadResponse.status === true) {
+                  res.send({
+                    status: true,
+                    message: "File is uploaded",
+                    data,
+                  });
+                }else{
+                  res.send({
+                    status: false,
+                    message: "File not uploaded",
+                    data,
+                  });
+                }
               })
               .catch((err) => {
                 console.log("err", err);

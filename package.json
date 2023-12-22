@@ -1,7 +1,7 @@
 {
   "name": "@awahab1116/intempco-api-plugin-images",
   "description": "Boilerplate Example plugin for the Reaction API",
-  "version": "1.2.13",
+  "version": "1.2.14",
   "main": "index.js",
   "type": "module",
   "engines": {
