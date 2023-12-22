@@ -12,6 +12,10 @@ extend input ProductVariantInput {
   Docs:[DocInfoInput]
   inStock: Boolean
   partNumber:String
+  "description field for varinat"
+  description: String
+  "short description field for varinat"
+  shortDescription: String
 }
 
 input ImageInfoInput {

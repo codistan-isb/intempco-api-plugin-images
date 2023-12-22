@@ -324,7 +324,17 @@ function myStartup1(context) {
         type: String,
         label: "Part Number",
         optional: true,
-    }
+    },
+    shortDescription: {
+      type: String,
+      label: "Short Description",
+      optional: true,
+    },
+    description: {
+      type: String,
+      label: "Description",
+      optional: true,
+    },
   });
 }
 
@@ -353,6 +363,8 @@ async function S3PublishMedia(
       catalogVariant.media = productVariant.media;
       catalogVariant.inStock = productVariant.inStock;
       catalogVariant.partNumber = productVariant.partNumber;
+      catalogVariant.description = productVariant.description;
+      catalogVariant.shortDescription = productVariant.shortDescription;
     });
 }
 
