@@ -254,6 +254,11 @@ function myStartup1(context) {
       label: "URL",
       optional: true,
     },
+    title: {
+      type: String,
+      label: "title",
+      optional: true,
+    },
   });
   context.simpleSchemas.Product.extend({
     media: {

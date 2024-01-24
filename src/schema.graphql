@@ -2,16 +2,16 @@ extend input ProductInput {
   media: [ImageInfoInput]
   Features: String
   Applications: String
-  Docs:[DocInfoInput]
+  Docs: [DocInfoInput]
   inStock: Boolean
 }
 extend input ProductVariantInput {
   media: [ImageInfoInput]
   Features: String
   Applications: String
-  Docs:[DocInfoInput]
+  Docs: [DocInfoInput]
   inStock: Boolean
-  partNumber:String
+  partNumber: String
   "description field for varinat"
   description: String
   "short description field for varinat"
@@ -26,6 +26,7 @@ input ImageInfoInput {
 }
 input DocInfoInput {
   URL: String
+  title: String
   productId: ID
   variantId: ID
 }
