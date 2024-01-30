@@ -79,7 +79,6 @@ export async function S3UploadImage(
       const resizedImages = await Promise.all(
         imgTransforms.map(async (transform) => {
           let { name, size, fit, format, type } = transform;
-
           return await sharp(fileContent)
             .rotate()
             .resize({
@@ -91,7 +90,7 @@ export async function S3UploadImage(
             .toBuffer();
         })
       );
-
+      // console.log("imgTransforms", imgTransforms);
       await Promise.all(
         resizedImages.map(async (image, index) => {
           const params = {
@@ -100,6 +99,7 @@ export async function S3UploadImage(
               uploadName.split(".")[0]
             }.webp`,
             Body: image,
+            ACL: "public-read", // This makes the uploaded image publicly readable
           };
           const { Location } = await s3.upload(params).promise();
           urlsArray.push(Location);
@@ -110,11 +110,13 @@ export async function S3UploadImage(
         Bucket: BUCKET_NAME,
         Key: `${uploadPath}/${uploadName}`,
         Body: fileContent,
+        ACL: "public-read", // This makes the uploaded image publicly readable
       };
       const { Location } = await s3.upload(params).promise();
+      console.log("Location", Location);
       urlsArray.push(Location);
     }
-    // console.log("urlsArray", urlsArray);
+    console.log("urlsArray", urlsArray);
     urlsArrayObj = urlToDictionary(urlsArray);
     return {
       status: true,
