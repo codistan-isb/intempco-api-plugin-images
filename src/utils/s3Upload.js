@@ -17,19 +17,23 @@ const promises = [];
 const imgTransforms = [
   {
     name: "image",
-    transform: { size: 1600, fit: "inside", format: "jpg", type: "image/jpeg" },
+    transform: { size: 1600, fit: "inside", format: "webp", type: "image/webp" },
+  },
+  {
+    name: "original",
+    transform: { size: 1800, fit: "inside", format: "webp", type: "image/webp" },
   },
   {
     name: "large",
-    transform: { size: 1000, fit: "inside", format: "jpg", type: "image/jpeg" },
+    transform: { size: 1000, fit: "inside", format: "webp", type: "image/webp" },
   },
   {
     name: "medium",
-    transform: { size: 600, fit: "inside", format: "jpg", type: "image/jpeg" },
+    transform: { size: 600, fit: "inside", format: "webp", type: "image/webp" },
   },
   {
     name: "small",
-    transform: { size: 450, fit: "inside", format: "jpg", type: "image/jpeg" },
+    transform: { size: 450, fit: "inside", format: "webp", type: "image/webp" },
   },
   {
     name: "thumbnail",
@@ -71,6 +75,7 @@ export async function S3UploadImage(
       image: {},
       large: {},
       medium: {},
+      original: {},
       small: {},
       thumbnail: {},
     };
@@ -142,6 +147,9 @@ function urlToDictionary(urlsArray) {
     }
     if (item.includes("/medium-")) {
       imageType = "medium";
+    }
+    if (item.includes("/original-")) {
+      imageType = "original";
     }
     if (item.includes("/large-")) {
       imageType = "large";
