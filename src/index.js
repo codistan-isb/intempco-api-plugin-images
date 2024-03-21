@@ -62,12 +62,16 @@ function myStartup1(context) {
           //loop all files
           _.forEach(_.keysIn(req.files.photos), (key) => {
             let photo = req.files.photos[key];
-            console.log("multi photos are ", photo);
-
+            // console.log("multi photos are ", photo);
             let getType = photo.mimetype.split("/");
-            console.log("get type is ", getType);
+            // console.log("get type is ", getType);
             let fileType = getType[0];
-            console.log("file type is ", fileType);
+            // console.log("file type is ", fileType);
+            // data.push({
+            //   name: photo.name,
+            //   mimetype: photo.mimetype,
+            //   size: photo.size,
+            // });
             let promise = S3UploadImage(
               req.files.photos[key].data,
               req.files.photos[key].name,
@@ -75,7 +79,18 @@ function myStartup1(context) {
               fileType,
               uploadPath
             ).then((uploadResponse) => {
-              console.log("upload response", uploadResponse);
+              // console.log("upload response", uploadResponse);
+              // data.push(uploadResponse)
+          
+              // console.log("key are ",key);
+              data.push({
+                name: photo.name,
+                mimetype: photo.mimetype,
+                size: photo.size,
+                availableSizes: uploadResponse.urlObject
+              });
+              // console.log("data values are ", data);
+              // data.availableSizes = uploadResponse.urlObject;
               if (uploadResponse[key]) {
                 data[uploadResponse[key]].url = uploadResponse.url;
                 data[uploadResponse[key]].availableSizes =
@@ -83,15 +98,17 @@ function myStartup1(context) {
               }
             });
             uploads.push(promise);
-            data.push({
-              name: photo.name,
-              mimetype: photo.mimetype,
-              size: photo.size,
-            });
+            // console.log("promise ",promise);
+            // console.log("data",data);
+            // data.push({
+            //   name: photo.name,
+            //   mimetype: photo.mimetype,
+            //   size: photo.size,
+            // });
           });
           Promise.all(uploads)
             .then(async function () {
-              console.log("data in promises", data);
+              // console.log("data in promises", data);
               res.send({
                 status: true,
                 message: "Files are uploaded",
@@ -117,7 +134,7 @@ function myStartup1(context) {
             let getType = photo.mimetype.split("/");
             // console.log("get type is ", getType);
             let fileType = getType[0];
-            console.log("file type is ", fileType);
+            // console.log("file type is ", fileType);
             // console.log("photo is ", photo);
             data.push({
               name: photo.name,
@@ -132,9 +149,9 @@ function myStartup1(context) {
               uploadPath
             )
               .then((uploadResponse) => {
-                console.log("uploadResponse", uploadResponse);
+                // console.log("uploadResponse", uploadResponse);
                 data[0].url = uploadResponse.url;
-                console.log("upload response is:- ", uploadResponse);
+                // console.log("upload response is:- ", uploadResponse);
                 data[0].availableSizes = uploadResponse.urlObject;
                 if (uploadResponse.status === true) {
                   res.send({

@@ -126,7 +126,7 @@ export async function S3UploadImage(
     return {
       status: true,
       msg: `All files uploaded successfully.`,
-      url: urlsArray,
+      // url: urlsArray,
       urlObject: urlsArrayObj,
     };
   } catch (err) {
